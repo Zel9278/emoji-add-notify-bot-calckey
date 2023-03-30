@@ -1,32 +1,36 @@
-require("dotenv").config()
+require("dotenv").config() //dotenv file
 
-const Misskey = require("./module/misskey")
+const Misskey = require("./module/misskey") //export module
 
-const stream = new Misskey("mi-wo.site", process.env.TOKEN)
+const stream = new Misskey("mi-wo.site", process.env.TOKEN) //login to bot(url, api key)
 
-let emojis = []
+let emojis = [] //init emoji array
 
 stream.on("connected", async () => {
-    stream.postNote("絵文字追加通知Botが起動しました。")
-    const api = await stream.api("emojis")
-    emojis = api.emojis
-    setInterval(async () => await runner(), 25000)
+    //misskey ws connection
+    stream.postNote("絵文字追加通知Botが起動しました。") //start up notify
+    const api = await stream.api("emojis") //get emoji list from api
+    emojis = api.emojis //override emoji array
+    setInterval(async () => await runner(), 25000) //run emoji checker to 25 seconds
 })
 
 const getDifference = (arr1, arr2) =>
-    arr2.filter((obj2) => !arr1.some((obj1) => obj2.url === obj1.url))
+    arr2.filter((obj2) => !arr1.some((obj1) => obj2.url === obj1.url)) //diff function
 
 async function runner() {
-    const api = await stream.api("emojis")
-    const old = emojis
+    //updater
+    const api = await stream.api("emojis") //get emoji list from api
+    const old = emojis //old emoji array
 
-    emojis = api.emojis
+    emojis = api.emojis //override emoji array
 
-    const diff = getDifference(old, emojis)
-    console.log(diff)
+    const diff = getDifference(old, emojis) //diff old/new emojis
+
     if (diff.length > 0) {
+        //if diff length
         console.log("絵文字が追加されました。")
         diff.forEach((emoji) => {
+            //notify to misskey
             stream.postNote(
                 `絵文字が追加されました: :${emoji.name}:\nカテゴリー: ${emoji.category}`
             )
