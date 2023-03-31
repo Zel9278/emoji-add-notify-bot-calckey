@@ -2,7 +2,7 @@ require("dotenv").config() //dotenv file
 
 const Misskey = require("./module/misskey") //export module
 
-const stream = new Misskey("mi-wo.site", process.env.TOKEN) //login to bot(url, api key)
+const stream = new Misskey("m.c30.life", process.env.TOKEN) //login to bot(url, api key)
 
 let emojis = [] //init emoji array
 
@@ -29,11 +29,7 @@ async function runner() {
     if (diff.length > 0) {
         //if diff length
         console.log("絵文字が追加されました。")
-        diff.forEach((emoji) => {
-            //notify to misskey
-            stream.postNote(
-                `絵文字が追加されました: :${emoji.name}:\nカテゴリー: ${emoji.category}`
-            )
-        })
+        const added_emojis = diff.map((emoji) => `:${emoji.name}:`).join(", ") //added emoji list
+        stream.postNote(`絵文字が追加されました: ${added_emojis}`) //post result
     }
 }
