@@ -2,7 +2,7 @@ require("dotenv").config() //dotenv file
 
 const Misskey = require("./module/misskey") //export module
 
-const stream = new Misskey("m.c30.life", process.env.TOKEN) //login to bot(url, api key)
+const stream = new Misskey(process.env.URI, process.env.TOKEN) //login to bot(url, api key)
 
 let emojis = [] //init emoji array
 
