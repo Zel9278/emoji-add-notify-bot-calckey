@@ -8,7 +8,8 @@ let emojis = [] //init emoji array
 
 stream.on("connected", async () => {
     //misskey ws connection
-    stream.postNote("絵文字追加通知Botが起動しました。") //start up notify
+    console.log("Bot is ready")
+    stream.postNote("絵文字追加通知Botが起動しました。", "public", false) //start up notify
     const api = await stream.api("emojis") //get emoji list from api
     emojis = api.emojis //override emoji array
     setInterval(async () => await runner(), 25000) //run emoji checker to 25 seconds
@@ -29,7 +30,14 @@ async function runner() {
     if (diff.length > 0) {
         //if diff length
         console.log("絵文字が追加されました。")
-        const added_emojis = diff.map((emoji) => `:${emoji.name}:`).join(", ") //added emoji list
-        stream.postNote(`絵文字が追加されました: ${added_emojis}`) //post result
+        const added_emojis = diff
+            .map((emoji) => `$[x2 :${emoji.name}:]\`:${emoji.name}:\``)
+            .join("\n") //added emoji list
+        stream.api("notes/create", {
+            cw: "絵文字が追加されました",
+            text: `${added_emojis}`,
+            visibility: "public",
+            localOnly: true,
+        }) //post result
     }
 }

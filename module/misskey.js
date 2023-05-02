@@ -55,11 +55,11 @@ class Misskey extends EventEmitter {
         }
     }
 
-    postNote(text) {
+    postNote(text, visibility, localOnly) {
         this.api("notes/create", {
             text,
-            visibility: "public",
-            localOnly: true,
+            visibility,
+            localOnly,
         })
     }
 }
