@@ -46,6 +46,11 @@ stream.on("note", (msg) => {
         stream.api("following/create", {
             userId: data?.user?.id,
         })
+
+        stream.api("notes/reactions/create", {
+            noteId: data?.id,
+            reaction: `:ok_hand:`,
+        })
     }
 })
 
