@@ -9,10 +9,35 @@ let emojis = [] //init emoji array
 stream.on("connected", async () => {
     //misskey ws connection
     console.log("Bot is ready")
-    stream.postNote("絵文字追加通知Botが起動しました。", "public", false) //start up notify
+    stream.postNote(
+        `絵文字追加通知Botが起動しました。\nuser ${stream.me?.name}(${stream.me?.username})`,
+        "public",
+        false
+    ) //start up notify
     const api = await stream.api("emojis") //get emoji list from api
     emojis = api.emojis //override emoji array
-    setInterval(async () => await runner(), 25000) //run emoji checker to 25 seconds
+    setInterval(async () => await runner(), 300000) //run emoji checker to 25 seconds
+})
+
+stream.on("note", (msg) => {
+    const { body: data } = msg
+
+    if (stream.me?.id === data?.user?.id) return
+    if (!data?.mentions?.includes(stream.me?.id)) return
+
+    const text = data?.text
+        .toString()
+        .toLowerCase()
+        .replace(`@${stream.me?.username}`, "")
+
+    if (text.includes("リアクション")) {
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+
+        stream.api("notes/reactions/create", {
+            noteId: data?.id,
+            reaction: `:${emoji?.name}:`,
+        })
+    }
 })
 
 const getDifference = (arr1, arr2) =>

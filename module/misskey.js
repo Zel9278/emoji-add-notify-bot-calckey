@@ -13,7 +13,7 @@ class Misskey extends EventEmitter {
         this.connected = false
 
         this.ws.on("error", console.error)
-        this.ws.on("open", (e) => {
+        this.ws.on("open", async (e) => {
             this.ws.send(
                 JSON.stringify({
                     type: "connect",
@@ -27,14 +27,20 @@ class Misskey extends EventEmitter {
                 JSON.stringify({
                     type: "connect",
                     body: {
-                        channel: "homeTimeline",
-                        id: "home",
+                        channel: "hybridTimeline",
+                        id: "social",
                     },
                 })
             )
+            this.me = await this.api("i")
             this.connected = true
 
-            this.emit("connected")
+            this.emit("connected", this.me)
+        })
+
+        this.ws.on("message", (msg) => {
+            const { body } = JSON.parse(msg)
+            this.emit(body.type, body)
         })
     }
 
@@ -51,7 +57,7 @@ class Misskey extends EventEmitter {
 
             return data
         } catch (error) {
-            console.error(error)
+            this.emit("api:error", error)
         }
     }
 
