@@ -16,26 +16,35 @@ stream.on("connected", async () => {
     ) //start up notify
     const api = await stream.api("emojis") //get emoji list from api
     emojis = api.emojis //override emoji array
-    setInterval(async () => await runner(), 300000) //run emoji checker to 25 seconds
+    setInterval(async () => await runner(), 300000) //run emoji checker to 5 Minutes
 })
 
 stream.on("note", (msg) => {
-    const { body: data } = msg
+    //note event
+    const { body: data } = msg //note data
 
-    if (stream.me?.id === data?.user?.id) return
-    if (!data?.mentions?.includes(stream.me?.id)) return
+    if (stream.me?.id === data?.user?.id) return //if me
+    if (!data?.mentions?.includes(stream.me?.id)) return //if include my id(not)
 
     const text = data?.text
         .toString()
         .toLowerCase()
-        .replace(`@${stream.me?.username}`, "")
+        .replace(`@${stream.me?.username}`, "") //get text(no mention)
 
     if (text.includes("リアクション")) {
+        //"リアクション" handler
         const emoji = emojis[Math.floor(Math.random() * emojis.length)]
 
         stream.api("notes/reactions/create", {
             noteId: data?.id,
             reaction: `:${emoji?.name}:`,
+        })
+    }
+
+    if (text.includes("フォローして")) {
+        //"フォローして" handler
+        stream.api("following/create", {
+            userId: data?.user?.id,
         })
     }
 })
