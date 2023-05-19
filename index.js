@@ -1,10 +1,13 @@
 require("dotenv").config() //dotenv file
 
 const Misskey = require("./module/misskey") //export module
+const MentionHandler = require("./src/mentionHandler")
 
 const stream = new Misskey(process.env.URI, process.env.TOKEN) //login to bot(url, api key)
 
 let emojis = [] //init emoji array
+
+const mentionHandler = new MentionHandler(stream, emojis)
 
 stream.on("connected", async () => {
     //misskey ws connection
@@ -16,42 +19,18 @@ stream.on("connected", async () => {
     ) //start up notify
     const api = await stream.api("emojis") //get emoji list from api
     emojis = api.emojis //override emoji array
+    mentionHandler.emoji(emojis)
     setInterval(async () => await runner(), 300000) //run emoji checker to 5 Minutes
 })
 
-stream.on("note", (msg) => {
-    //note event
-    const { body: data } = msg //note data
+stream.on("mention", (msg) => mentionHandler.push(msg.body))
 
-    if (stream.me?.id === data?.user?.id) return //if me
-    if (!data?.mentions?.includes(stream.me?.id)) return //if include my id(not)
+stream.on("api:error", (error) => {
+    console.error(error)
+})
 
-    const text = data?.text
-        .toString()
-        .toLowerCase()
-        .replace(`@${stream.me?.username}`, "") //get text(no mention)
-
-    if (text.includes("リアクション")) {
-        //"リアクション" handler
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-
-        stream.api("notes/reactions/create", {
-            noteId: data?.id,
-            reaction: `:${emoji?.name}:`,
-        })
-    }
-
-    if (text.includes("フォローして")) {
-        //"フォローして" handler
-        stream.api("following/create", {
-            userId: data?.user?.id,
-        })
-
-        stream.api("notes/reactions/create", {
-            noteId: data?.id,
-            reaction: `:ok_hand:`,
-        })
-    }
+stream.on("ws:error", (error) => {
+    console.error(error)
 })
 
 const getDifference = (arr1, arr2) =>
@@ -63,6 +42,7 @@ async function runner() {
     const old = emojis //old emoji array
 
     emojis = api.emojis //override emoji array
+    mentionHandler.emoji(emojis)
 
     const diff = getDifference(old, emojis) //diff old/new emojis
 

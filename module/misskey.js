@@ -12,7 +12,8 @@ class Misskey extends EventEmitter {
         this.ws = new ws(this.uri)
         this.connected = false
 
-        this.ws.on("error", console.error)
+        this.ws.on("error", (error) => this.emit("ws:error", error))
+
         this.ws.on("open", async (e) => {
             this.ws.send(
                 JSON.stringify({
@@ -40,6 +41,7 @@ class Misskey extends EventEmitter {
 
         this.ws.on("message", (msg) => {
             const { body } = JSON.parse(msg)
+
             this.emit(body.type, body)
         })
     }
@@ -66,6 +68,19 @@ class Misskey extends EventEmitter {
             text,
             visibility,
             localOnly,
+        })
+    }
+
+    postFollow(userId) {
+        this.api("following/create", {
+            userId,
+        })
+    }
+
+    postReaction(noteId, reaction) {
+        this.api("notes/reactions/create", {
+            noteId,
+            reaction,
         })
     }
 }
