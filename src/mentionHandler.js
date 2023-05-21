@@ -7,6 +7,9 @@ const commands = {
         stream.postReaction(note?.id, `👌`)
         stream.postFollow(note?.user?.id)
     },
+    にゃーん(stream, note) {
+        stream.postReaction(note?.id, `🐈`)
+    },
 }
 
 class MentionHandler {

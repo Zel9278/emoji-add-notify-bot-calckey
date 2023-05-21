@@ -24,14 +24,8 @@ stream.on("connected", async () => {
 })
 
 stream.on("mention", (msg) => mentionHandler.push(msg.body))
-
-stream.on("api:error", (error) => {
-    console.error(error)
-})
-
-stream.on("ws:error", (error) => {
-    console.error(error)
-})
+stream.on("api:error", console.error)
+stream.on("ws:error", console.error)
 
 const getDifference = (arr1, arr2) =>
     arr2.filter((obj2) => !arr1.some((obj1) => obj2.url === obj1.url)) //diff function
@@ -52,11 +46,12 @@ async function runner() {
         const added_emojis = diff
             .map((emoji) => `$[x2 :${emoji.name}:]\`:${emoji.name}:\``)
             .join("\n") //added emoji list
-        stream.api("notes/create", {
-            cw: "絵文字が追加されました",
-            text: `${added_emojis}`,
-            visibility: "public",
-            localOnly: true,
-        }) //post result
+
+        stream.postNote(
+            `${added_emojis}`,
+            "public",
+            true,
+            "絵文字が追加されました"
+        ) //post result
     }
 }
