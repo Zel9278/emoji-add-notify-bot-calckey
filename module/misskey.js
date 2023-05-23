@@ -63,7 +63,7 @@ class Misskey extends EventEmitter {
         }
     }
 
-    postNote(text, visibility, localOnly, cw) {
+    send(text, visibility, localOnly, cw) {
         this.api("notes/create", {
             text,
             visibility,
@@ -72,13 +72,13 @@ class Misskey extends EventEmitter {
         })
     }
 
-    postFollow(userId) {
+    sendFollow(userId) {
         this.api("following/create", {
             userId,
         })
     }
 
-    postReaction(noteId, reaction) {
+    sendReaction(noteId, reaction) {
         this.api("notes/reactions/create", {
             noteId,
             reaction,

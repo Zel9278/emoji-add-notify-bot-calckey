@@ -1,14 +1,14 @@
 const commands = {
     リアクション(stream, note, emojis) {
         const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-        stream.postReaction(note?.id, `:${emoji?.name}:`)
+        stream.sendReaction(note?.id, `:${emoji?.name}:`)
     },
     フォローして(stream, note) {
-        stream.postReaction(note?.id, `👌`)
-        stream.postFollow(note?.user?.id)
+        stream.sendReaction(note?.id, `👌`)
+        stream.sendFollow(note?.user?.id)
     },
     にゃーん(stream, note) {
-        stream.postReaction(note?.id, `🐈`)
+        stream.sendReaction(note?.id, `🐈`)
     },
 }
 
@@ -33,7 +33,7 @@ class MentionHandler {
         const text = note?.text.toString().toLowerCase().replace(re, "") //get text(no mention)
 
         if (!Object.keys(commands).find((name) => text.includes(name)))
-            return this.stream.postReaction(note?.id, `❤`)
+            return this.stream.sendReaction(note?.id, `❤`)
 
         const command =
             commands[Object.keys(commands).find((name) => text.includes(name))]

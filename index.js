@@ -12,7 +12,7 @@ const mentionHandler = new MentionHandler(stream, emojis)
 stream.on("connected", async () => {
     //misskey ws connection
     console.log("Bot is ready")
-    stream.postNote(
+    stream.send(
         `絵文字追加通知Botが起動しました。\nuser ${stream.me?.name}(${stream.me?.username})`,
         "public",
         false
@@ -47,11 +47,6 @@ async function runner() {
             .map((emoji) => `$[x2 :${emoji.name}:]\`:${emoji.name}:\``)
             .join("\n") //added emoji list
 
-        stream.postNote(
-            `${added_emojis}`,
-            "public",
-            true,
-            "絵文字が追加されました"
-        ) //post result
+        stream.send(`${added_emojis}`, "public", true, "絵文字が追加されました") //post result
     }
 }
