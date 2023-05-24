@@ -9,41 +9,74 @@ class Misskey extends EventEmitter {
         this.host = host
         this.token = token
         this.uri = `wss://${host}/streaming?i=${token}`
-        this.ws = new ws(this.uri)
         this.connected = false
 
-        this.ws.on("error", (error) => this.emit("ws:error", error))
+        this.connect()
+    }
 
-        this.ws.on("open", async (e) => {
-            this.ws.send(
-                JSON.stringify({
-                    type: "connect",
-                    body: {
-                        channel: "main",
-                        id: "main",
-                    },
+    connect() {
+        ;((uri) => {
+            try {
+                if (this.connected) return
+                if (this.ws) {
+                    this.ws.removeAllListeners()
+                    this.ws.close()
+                }
+                this.ws = new ws(uri)
+
+                this.ws.on("error", (error) => this.emit("ws:error", error))
+                this.ws.on("open", async () => {
+                    this.ws.send(
+                        JSON.stringify({
+                            type: "connect",
+                            body: {
+                                channel: "main",
+                                id: "main",
+                            },
+                        })
+                    )
+
+                    this.ws.send(
+                        JSON.stringify({
+                            type: "connect",
+                            body: {
+                                channel: "hybridTimeline",
+                                id: "social",
+                            },
+                        })
+                    )
+
+                    this.me = await this.api("i")
+                    this.connected = true
+
+                    this.emit("ws:connected", this.me)
                 })
-            )
-            this.ws.send(
-                JSON.stringify({
-                    type: "connect",
-                    body: {
-                        channel: "hybridTimeline",
-                        id: "social",
-                    },
+
+                this.ws.on("close", (e) => {
+                    this.me = null
+                    this.connected = false
+                    this.emit("ws:disconnected", e)
                 })
-            )
-            this.me = await this.api("i")
-            this.connected = true
 
-            this.emit("connected", this.me)
-        })
+                this.ws.on("message", (msg) => {
+                    if (!this.connected) return
+                    if (!msg) return
+                    const { body } = JSON.parse(msg)
 
-        this.ws.on("message", (msg) => {
-            const { body } = JSON.parse(msg)
+                    this.emit(body.type, body)
+                })
+            } catch (error) {
+                console.error(error.toString())
+                console.log("[misskey.js] reconnecting in 5sec...")
+                setTimeout(() => this.reconnect(uri), 5000)
+            }
+        })(this.uri)
+    }
 
-            this.emit(body.type, body)
-        })
+    disconnect() {
+        if (!this.connected) return
+        this.ws.removeAllListeners()
+        this.ws.close()
     }
 
     async api(endPoint, data) {
@@ -70,6 +103,15 @@ class Misskey extends EventEmitter {
             localOnly,
             cw,
         })
+    }
+
+    async getEmojis() {
+        try {
+            const { emojis } = await this.api("emojis")
+            return emojis
+        } catch (error) {
+            return []
+        }
     }
 
     sendFollow(userId) {

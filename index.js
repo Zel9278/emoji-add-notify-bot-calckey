@@ -9,7 +9,7 @@ let emojis = [] //init emoji array
 
 const mentionHandler = new MentionHandler(stream, emojis)
 
-stream.on("connected", async () => {
+stream.on("ws:connected", async () => {
     //misskey ws connection
     console.log("Bot is ready")
     stream.send(
@@ -17,25 +17,28 @@ stream.on("connected", async () => {
         "public",
         false
     ) //start up notify
-    const api = await stream.api("emojis") //get emoji list from api
-    emojis = api.emojis //override emoji array
+    const api = await stream.getEmojis() //get emoji list from api
+    emojis = api //override emoji array
     mentionHandler.emoji(emojis)
     setInterval(async () => await runner(), 300000) //run emoji checker to 5 Minutes
 })
 
-stream.on("mention", (msg) => mentionHandler.push(msg.body))
-stream.on("api:error", console.error)
-stream.on("ws:error", console.error)
+stream.on("ws:disconnected", () => {
+    console.log("Bot is disconnected")
+    reconnectHandler() //reconnect handler
+})
+
+stream.on("mention", (msg) => mentionHandler.push(msg.body)) //mention handler
 
 const getDifference = (arr1, arr2) =>
     arr2.filter((obj2) => !arr1.some((obj1) => obj2.url === obj1.url)) //diff function
 
 async function runner() {
     //updater
-    const api = await stream.api("emojis") //get emoji list from api
+    const api = await stream.getEmojis() //get emoji list from api
     const old = emojis //old emoji array
 
-    emojis = api.emojis //override emoji array
+    emojis = api //override emoji array
     mentionHandler.emoji(emojis)
 
     const diff = getDifference(old, emojis) //diff old/new emojis
@@ -50,3 +53,12 @@ async function runner() {
         stream.send(`${added_emojis}`, "public", true, "絵文字が追加されました") //post result
     }
 }
+
+function reconnectHandler() {
+    //reconnect handler
+    console.log("reconnecting in 15sec...")
+    setTimeout(async () => await stream.connect(), 15000) //reconnect to 15sec
+}
+
+process.on("unhandledRejection", console.error) //error handler
+process.on("uncaughtException", console.error) //error handler
