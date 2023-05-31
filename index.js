@@ -50,7 +50,12 @@ async function runner() {
             .map((emoji) => `$[x2 :${emoji.name}:]\`:${emoji.name}:\``)
             .join("\n") //added emoji list
 
-        stream.send(`${added_emojis}`, "public", true, "絵文字が追加されました") //post result
+        stream.send(
+            `${added_emojis}`,
+            "public",
+            false,
+            "絵文字が追加されました"
+        ) //post result
     }
 }
 

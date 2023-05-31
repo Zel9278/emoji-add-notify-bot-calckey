@@ -107,7 +107,7 @@ class Misskey extends EventEmitter {
 
     async getEmojis() {
         try {
-            const { emojis } = await this.api("emojis")
+            const { emojis } = await this.api("meta")
             return emojis
         } catch (error) {
             return []
