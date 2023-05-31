@@ -6,17 +6,20 @@ const MentionHandler = require("./src/mentionHandler")
 const stream = new Misskey(process.env.URI, process.env.TOKEN) //login to bot(url, api key)
 
 let emojis = [] //init emoji array
+let isReconnect = false //init reconnect flag
 
 const mentionHandler = new MentionHandler(stream, emojis)
 
 stream.on("ws:connected", async () => {
     //misskey ws connection
     console.log("Bot is ready")
-    stream.send(
-        `絵文字追加通知Botが起動しました。\nuser ${stream.me?.name}(${stream.me?.username})`,
-        "public",
-        false
-    ) //start up notify
+    if (!isReconnect)
+        stream.send(
+            `絵文字追加通知Botが起動しました。\nuser ${stream.me?.name}(${stream.me?.username})`,
+            "public",
+            false
+        ) //start up notify
+    isReconnect = false
     const api = await stream.getEmojis() //get emoji list from api
     emojis = api //override emoji array
     mentionHandler.emoji(emojis)
@@ -25,6 +28,7 @@ stream.on("ws:connected", async () => {
 
 stream.on("ws:disconnected", () => {
     console.log("Bot is disconnected")
+    isReconnect = true
     reconnectHandler() //reconnect handler
 })
 
