@@ -13,17 +13,20 @@ const mentionHandler = new MentionHandler(stream, emojis)
 stream.on("ws:connected", async () => {
     //misskey ws connection
     console.log("Bot is ready")
-    if (!isReconnect)
+    if (!isReconnect) {
         stream.send(
             `絵文字追加通知Botが起動しました。\nuser ${stream.me?.name}(${stream.me?.username})`,
             "public",
             false
         ) //start up notify
-    isReconnect = false
-    const api = await stream.getEmojis() //get emoji list from api
-    emojis = api //override emoji array
-    mentionHandler.emoji(emojis)
-    setInterval(async () => await runner(), 300000) //run emoji checker to 5 Minutes
+
+        const api = await stream.getEmojis() //get emoji list from api
+        emojis = api //override emoji array
+        mentionHandler.emoji(emojis)
+        setInterval(async () => await runner(), 150000) //run emoji checker to 2.5min
+    } else {
+        isReconnect = false
+    }
 })
 
 stream.on("ws:disconnected", () => {
